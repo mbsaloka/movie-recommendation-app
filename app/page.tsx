@@ -1,15 +1,12 @@
 "use client"
 
-import { useState } from "react"
 import { RecommenderProvider, useRecommender } from "@/context/recommender-context"
 import { SearchBox } from "@/components/search-box"
 import { RecommendationsList } from "@/components/recommendations-list"
-import { GraphView } from "@/components/graph-view"
 import { Loader2, AlertCircle } from "lucide-react"
 
 function HomeContent() {
   const { recommendations, isLoading, error, selectedMovie } = useRecommender()
-  const [showGraph, setShowGraph] = useState(false)
 
   return (
     <main className="min-h-screen bg-background">
@@ -17,8 +14,8 @@ function HomeContent() {
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold text-foreground">Cineverse</h1>
-            <p className="text-muted-foreground">AI-Powered Movie Recommendations</p>
+            <h1 className="text-4xl font-bold text-foreground">Movie Recommendation</h1>
+            <p className="text-muted-foreground">Knowladge-Based Movie Recommendations</p>
           </div>
         </div>
       </header>
@@ -36,7 +33,7 @@ function HomeContent() {
         {/* Error State */}
         {error && (
           <div className="mb-8 p-4 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-destructive">{error}</p>
             </div>
@@ -53,22 +50,11 @@ function HomeContent() {
           </div>
         )}
 
-        {/* Recommendations and Graph */}
+        {/* Recommendations */}
         {!isLoading && recommendations.length > 0 && (
           <div className="space-y-12">
             {/* Recommendations */}
             <RecommendationsList recommendations={recommendations} />
-
-            {/* Graph Toggle and Visualization */}
-            <div className="space-y-4">
-              <button
-                onClick={() => setShowGraph(!showGraph)}
-                className="inline-flex items-center px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium text-sm"
-              >
-                {showGraph ? "Hide" : "Show"} Film Relationships
-              </button>
-              <GraphView showGraph={showGraph} />
-            </div>
           </div>
         )}
 
@@ -80,8 +66,7 @@ function HomeContent() {
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-2">Discover Amazing Films</h2>
             <p className="text-muted-foreground max-w-md mx-auto">
-              Search for your favorite movie and get personalized recommendations powered by AI and Neo4j graph
-              analysis.
+              Search for your favorite movie and get recommendations.
             </p>
           </div>
         )}

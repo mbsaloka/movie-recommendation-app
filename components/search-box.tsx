@@ -10,16 +10,15 @@ export function SearchBox() {
   const [suggestions, setSuggestions] = useState<Array<{ id: string; title: string; score: number }>>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [inputValue, setInputValue] = useState("")
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [lastSelectedTitle, setLastSelectedTitle] = useState<string | null>(null)
   const debouncedValue = useDebounce(inputValue, 300)
-  const { setSelectedMovie, setSearchQuery, setRecommendations, setGraphData, setIsLoading, setError } =
-    useRecommender()
+  const { setSelectedMovie, setSearchQuery, setRecommendations, setIsLoading, setError } = useRecommender()
 
   useEffect(() => {
-    if (!debouncedValue.trim()) {
-      setSuggestions([])
-      setShowSuggestions(false)
-      return
-    }
+    if (isSelecting) return
+    if (!debouncedValue.trim()) return
+    if (debouncedValue === lastSelectedTitle) return
 
     const fetchSuggestions = async () => {
       try {
@@ -34,9 +33,11 @@ export function SearchBox() {
     }
 
     fetchSuggestions()
-  }, [debouncedValue, setError])
+  }, [debouncedValue, isSelecting, lastSelectedTitle, setError])
 
   const handleSelectMovie = async (movieId: string, title: string) => {
+    setIsSelecting(true)
+    setLastSelectedTitle(title)
     setInputValue(title)
     setShowSuggestions(false)
     setSelectedMovie(movieId)
@@ -46,14 +47,16 @@ export function SearchBox() {
     try {
       const result = await apiClient.getRecommendations(movieId)
       setRecommendations(result.recommendations)
-      setGraphData(result.graphData)
       setError(null)
     } catch (err) {
       setError("Failed to get recommendations")
     } finally {
       setIsLoading(false)
+      setIsSelecting(false)
     }
   }
+
+
 
   return (
     <div className="relative w-full">
@@ -91,7 +94,7 @@ export function SearchBox() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-medium text-foreground">{movie.title}</p>
-                  <p className="text-sm text-muted-foreground">Match: {Math.round(movie.score * 100)}%</p>
+                  {/* <p className="text-sm text-muted-foreground">Match: {Math.round(movie.score * 100)}%</p> */}
                 </div>
               </div>
             </button>

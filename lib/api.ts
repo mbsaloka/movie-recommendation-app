@@ -1,5 +1,3 @@
-import { dummyMovies, fuzzySearchMovies, generateMockRecommendations, generateMockGraphData } from "./dummy-data"
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
 export interface Movie {
@@ -10,75 +8,70 @@ export interface Movie {
   language: string
   releaseYear: number
   score: number
-  posterUrl?: string
 }
 
 export interface RecommendationResponse {
   query: string
   selectedMovie: Movie
   recommendations: Array<Movie & { confidence: number }>
-  graphData?: {
-    nodes: Array<{ id: string; label: string; score: number }>
-    edges: Array<{ source: string; target: string; weight: number }>
-  }
 }
 
 export interface AutoSuggestResponse {
   suggestions: Array<{ id: string; title: string; score: number }>
 }
 
+/* ================================
+   ✅ REAL API INTEGRATION
+================================ */
 export const apiClient = {
-  // Search for movies with auto-suggest - uses dummy data
+  // ✅ AUTOSUGGEST SEARCH (REAL BACKEND)
   searchMovies: async (query: string): Promise<AutoSuggestResponse> => {
     try {
-      // Simulate API delay for realistic UX
-      await new Promise((resolve) => setTimeout(resolve, 200))
-      const suggestions = fuzzySearchMovies(query)
-      return { suggestions }
+      const res = await fetch(
+        `${API_BASE_URL}/movies/search?query=${encodeURIComponent(query)}`
+      )
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch movie suggestions")
+      }
+
+      return await res.json()
     } catch (error) {
       console.error("Search error:", error)
       throw error
     }
   },
 
-  // Get recommendations for a specific movie - uses dummy data
+  // ✅ GET RECOMMENDATIONS (REAL BACKEND)
   getRecommendations: async (movieId: string): Promise<RecommendationResponse> => {
     try {
-      // Simulate API delay for realistic UX
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      const res = await fetch(
+        `${API_BASE_URL}/recommendations/${encodeURIComponent(movieId)}`
+      )
 
-      const selectedMovie = dummyMovies.find((m) => m.id === movieId)
-      if (!selectedMovie) {
-        throw new Error("Movie not found")
+      if (!res.ok) {
+        throw new Error("Failed to fetch recommendations")
       }
 
-      const recommendations = generateMockRecommendations(movieId)
-      const graphData = generateMockGraphData(movieId)
-
-      return {
-        query: selectedMovie.title,
-        selectedMovie,
-        recommendations,
-        graphData,
-      }
+      return await res.json()
     } catch (error) {
       console.error("Recommendations error:", error)
       throw error
     }
   },
 
-  // Get movie details - uses dummy data
+  // ✅ GET MOVIE DETAIL (REAL BACKEND)
   getMovieDetails: async (movieId: string): Promise<Movie> => {
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 300))
+      const res = await fetch(
+        `${API_BASE_URL}/movies/${encodeURIComponent(movieId)}`
+      )
 
-      const movie = dummyMovies.find((m) => m.id === movieId)
-      if (!movie) {
-        throw new Error("Movie not found")
+      if (!res.ok) {
+        throw new Error("Failed to fetch movie detail")
       }
 
-      return movie
+      return await res.json()
     } catch (error) {
       console.error("Movie details error:", error)
       throw error

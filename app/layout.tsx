@@ -11,7 +11,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Movie Recommender - Discover Films You'll Love",
   description:
-    "Find your next favorite movie with AI-powered recommendations. Search, explore, and visualize film relationships.",
+    "Find your next favorite movie with AI-powered recommendations. Search, explore and recommendation.",
   icons: {
     icon: [
       {

@@ -10,8 +10,6 @@ export interface RecommenderContextType {
   setSearchQuery: (query: string) => void
   recommendations: Array<any>
   setRecommendations: (recs: Array<any>) => void
-  graphData: any
-  setGraphData: (data: any) => void
   isLoading: boolean
   setIsLoading: (loading: boolean) => void
   error: string | null
@@ -24,7 +22,6 @@ export function RecommenderProvider({ children }: { children: React.ReactNode })
   const [selectedMovie, setSelectedMovie] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [recommendations, setRecommendations] = useState<Array<any>>([])
-  const [graphData, setGraphData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,8 +34,6 @@ export function RecommenderProvider({ children }: { children: React.ReactNode })
         setSearchQuery,
         recommendations,
         setRecommendations,
-        graphData,
-        setGraphData,
         isLoading,
         setIsLoading,
         error,
