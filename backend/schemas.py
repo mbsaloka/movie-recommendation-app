@@ -9,7 +9,6 @@ class Movie(BaseModel):
     language: str
     releaseYear: int
     score: float
-    posterUrl: Optional[str] = None
 
 class RecommendationMovie(Movie):
     confidence: float

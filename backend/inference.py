@@ -14,8 +14,8 @@ NEO4J_USER = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 NEO4J_DATABASE = os.getenv("NEO4J_DATABASE")
 
-DATASET_PATH = Path("tmdb_5000_movies.csv")
-CACHE_PATH = Path("embeddings_cache.pkl")
+DATASET_PATH = Path("data/tmdb_5000_movies.csv")
+CACHE_PATH = Path("data/embeddings_cache.pkl")
 
 TOP_K = 10
 
