@@ -39,7 +39,7 @@ function HomeContent() {
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold text-foreground">Movie Recommendation</h1>
+            <h1 className="text-4xl font-bold text-foreground">MovieGraphRec</h1>
             <p className="text-muted-foreground">Knowledge-Based Movie Recommendations</p>
           </div>
         </div>

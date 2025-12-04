@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from inference import HybridRecommender
 import time
 
-app = FastAPI(title="Movie Recommendation API")
+app = FastAPI(title="MovieGraphRec API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
