@@ -13,9 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# -----------------------------
-# ✅ SIMPLE IN-MEMORY CACHE
-# -----------------------------
 CACHE = {}
 CACHE_TTL = 30  # detik
 
@@ -41,9 +38,6 @@ def get_movie_genres(session, movie_id):
     return genres
 
 
-# -----------------------------
-# ✅ AUTOSUGGEST (SEARCH + FUZZY)
-# -----------------------------
 @app.get("/api/movies/search")
 def search_movies(query: str = Query(...)):
     cache_key = f"search:{query}"
@@ -55,7 +49,7 @@ def search_movies(query: str = Query(...)):
         cypher = """
         MATCH (m:Movie)
         WHERE toLower(m.title) CONTAINS toLower($q)
-        RETURN m.id AS id, m.title AS title, m.score AS score
+        RETURN m.id AS id, m.title AS title
         LIMIT 10
         """
         result = session.run(cypher, q=query)
@@ -79,15 +73,12 @@ def search_movies(query: str = Query(...)):
         return response
 
 
-# -----------------------------
-# ✅ DETAIL MOVIE (WITH CACHE)
-# -----------------------------
 @app.get("/api/movies/{movie_id}")
-def get_movie_detail(movie_id: str):
+def get_movie_detail(movie_id: int):
     cache_key = f"movie:{movie_id}"
     cached = get_cache(cache_key)
-    if cached:
-        return cached
+    # if cached:
+        # return cached
 
     with get_session() as session:
         cypher = """
@@ -100,24 +91,28 @@ def get_movie_detail(movie_id: str):
             return {"error": "Movie not found"}
 
         m = result["m"]
+        release_date = m.get("release_date")
+        release_year = release_date.year if release_date else None
+
+        genres = get_movie_genres(session, m["id"])
+
         response = {
             "id": m["id"],
             "title": m["title"],
             "overview": m.get("overview", ""),
-            "genres": m.get("genres", []),
+            "genres": genres,
             "language": m.get("language", "en"),
-            "releaseYear": m.get("releaseYear", 0),
-            "score": m.get("score", 0.0),
-            "posterUrl": m.get("posterUrl"),
+            "releaseYear": release_year,
+            "score": m.get("vote_average", 0.0),
+            "popularity": m.get("popularity", 0.0),
+            "budget": m.get("budget", 0),
+            "revenue": m.get("revenue", 0)
         }
 
         set_cache(cache_key, response)
         return response
 
 
-# -----------------------------
-# ✅ RECOMMENDATION (WITH CACHE)
-# -----------------------------
 @app.get("/api/recommendations/{movie_id}")
 def get_recommendations(movie_id: int):
     cache_key = f"rec:{movie_id}"
@@ -133,24 +128,26 @@ def get_recommendations(movie_id: int):
             id=movie_id
         ).single()
 
-        # print("Movie ID Requested:", movie_id)
-        # print("Movie Found in DB:", movie is not None)
-
         if not movie:
             return {
                 "query": "",
                 "selectedMovie": None,
                 "recommendations": [],
-                "graphData": {"nodes": [], "edges": []}
+                "fallback": True
             }
 
         m = movie["m"]
         title = m["title"]
 
-        results, fallback = recommender.get_recommendations(title)
+        result_bundle = recommender.get_recommendations(title)
+
+        hybrid_results = result_bundle["hybrid"]
+        graph_scores = {x["title"]: x["score"] for x in result_bundle["graph"]}
+        semantic_scores = {x["title"]: x["score"] for x in result_bundle["semantic"]}
+        fallback = result_bundle["fallback"]
+
         release_date = m.get("release_date")
         release_year = release_date.year if release_date else None
-
         genres = get_movie_genres(session, m["id"])
 
         selected_movie = {
@@ -165,7 +162,11 @@ def get_recommendations(movie_id: int):
 
         recommendations = []
 
-        for rec_title, score, confidence in results:
+        for item in hybrid_results:
+            rec_title = item["title"]
+            hybrid_score = item["score"]
+            confidence = item["confidence"]
+
             rec_movie = session.run(
                 "MATCH (r:Movie {title: $title}) RETURN r LIMIT 1",
                 title=rec_title
@@ -178,8 +179,10 @@ def get_recommendations(movie_id: int):
 
             r_release_date = r.get("release_date")
             r_release_year = r_release_date.year if r_release_date else None
-
             r_genres = get_movie_genres(session, r["id"])
+
+            graph_score = graph_scores.get(rec_title, 0.0)
+            semantic_score = semantic_scores.get(rec_title, 0.0)
 
             recommendations.append({
                 "id": r["id"],
@@ -189,17 +192,21 @@ def get_recommendations(movie_id: int):
                 "language": r.get("language", "en"),
                 "releaseYear": r_release_year,
                 "score": r.get("vote_average", 0.0),
-                "confidence": confidence / 100
+                "confidence": confidence / 100,
+                "graphScore": graph_score,
+                "semanticScore": semantic_score,
             })
 
         response = {
             "query": title,
             "selectedMovie": selected_movie,
             "recommendations": recommendations,
+            "fallback": fallback
         }
 
         set_cache(cache_key, response)
         return response
+
 
 @app.get("/api/debug/movies")
 def debug_movies():

@@ -11,6 +11,8 @@ interface Recommendation {
   releaseYear: number
   score: number
   confidence: number
+  graphScore: number
+  semanticScore: number
 }
 
 interface RecommendationsListProps {
@@ -56,6 +58,8 @@ export function RecommendationsList({
             releaseYear={movie.releaseYear}
             score={movie.score}
             confidence={movie.confidence}
+            graphScore={movie.graphScore}
+            semanticScore={movie.semanticScore}
             isSelected={movie.id === selectedMovie}
             onSelect={() => onSelectMovie?.(movie.id)}
           />

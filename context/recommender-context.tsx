@@ -1,5 +1,6 @@
 "use client"
 
+import { Movie } from "@/lib/api";
 import type React from "react"
 import { createContext, useContext, useState } from "react"
 
@@ -14,6 +15,8 @@ export interface RecommenderContextType {
   setIsLoading: (loading: boolean) => void
   error: string | null
   setError: (error: string | null) => void
+  selectedMovieDetail: Movie | null
+  setSelectedMovieDetail: (movie: Movie | null) => void
 }
 
 const RecommenderContext = createContext<RecommenderContextType | undefined>(undefined)
@@ -24,12 +27,15 @@ export function RecommenderProvider({ children }: { children: React.ReactNode })
   const [recommendations, setRecommendations] = useState<Array<any>>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedMovieDetail, setSelectedMovieDetail] = useState<Movie | null>(null)
 
   return (
     <RecommenderContext.Provider
       value={{
         selectedMovie,
         setSelectedMovie,
+        selectedMovieDetail,
+        setSelectedMovieDetail,
         searchQuery,
         setSearchQuery,
         recommendations,

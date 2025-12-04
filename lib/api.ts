@@ -8,6 +8,9 @@ export interface Movie {
   language: string
   releaseYear: number
   score: number
+  popularity?: number
+  budget?: number
+  revenue?: number
 }
 
 export interface RecommendationResponse {
@@ -20,11 +23,7 @@ export interface AutoSuggestResponse {
   suggestions: Array<{ id: string; title: string; score: number }>
 }
 
-/* ================================
-   ✅ REAL API INTEGRATION
-================================ */
 export const apiClient = {
-  // ✅ AUTOSUGGEST SEARCH (REAL BACKEND)
   searchMovies: async (query: string): Promise<AutoSuggestResponse> => {
     try {
       const res = await fetch(
@@ -42,7 +41,6 @@ export const apiClient = {
     }
   },
 
-  // ✅ GET RECOMMENDATIONS (REAL BACKEND)
   getRecommendations: async (movieId: string): Promise<RecommendationResponse> => {
     try {
       const res = await fetch(
@@ -60,7 +58,6 @@ export const apiClient = {
     }
   },
 
-  // ✅ GET MOVIE DETAIL (REAL BACKEND)
   getMovieDetails: async (movieId: string): Promise<Movie> => {
     try {
       const res = await fetch(

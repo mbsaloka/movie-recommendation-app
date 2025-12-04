@@ -13,7 +13,9 @@ export function SearchBox() {
   const [isSelecting, setIsSelecting] = useState(false)
   const [lastSelectedTitle, setLastSelectedTitle] = useState<string | null>(null)
   const debouncedValue = useDebounce(inputValue, 300)
-  const { setSelectedMovie, setSearchQuery, setRecommendations, setIsLoading, setError } = useRecommender()
+  const {
+    setSelectedMovie, setSelectedMovieDetail, setSearchQuery, setRecommendations, setIsLoading, setError
+  } = useRecommender()
 
   useEffect(() => {
     if (isSelecting) return
@@ -45,8 +47,12 @@ export function SearchBox() {
     setIsLoading(true)
 
     try {
+      const movieDetail = await apiClient.getMovieDetails(movieId)
+      setSelectedMovieDetail(movieDetail)
+
       const result = await apiClient.getRecommendations(movieId)
       setRecommendations(result.recommendations)
+
       setError(null)
     } catch (err) {
       setError("Failed to get recommendations")

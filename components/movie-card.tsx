@@ -9,6 +9,8 @@ interface MovieCardProps {
   releaseYear: number
   score: number
   confidence?: number
+  graphScore?: number
+  semanticScore?: number
   isSelected?: boolean
   onSelect?: () => void
 }
@@ -21,6 +23,8 @@ export function MovieCard({
   releaseYear,
   score,
   confidence = 0,
+  graphScore = 0,
+  semanticScore = 0,
   isSelected = false,
   onSelect,
 }: MovieCardProps) {
@@ -53,7 +57,7 @@ export function MovieCard({
       </div>
 
       {/* Confidence bar */}
-      {confidence > 0 && (
+      {confidence >= 0 && (
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1">
             <span className="text-xs font-medium text-accent">Match</span>
@@ -63,8 +67,44 @@ export function MovieCard({
           </div>
           <div className="h-1.5 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300"
+              className="h-full bg-linear-to-r from-primary to-accent transition-all duration-300"
               style={{ width: `${confidence * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Graph Score bar */}
+      {graphScore >= 0 && (
+        <div className="mb-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs font-medium text-accent">Graph Score</span>
+            <span className="text-xs font-bold text-accent">
+              {Math.round(graphScore * 100)}%
+            </span>
+          </div>
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-linear-to-r from-primary to-accent transition-all duration-300"
+              style={{ width: `${graphScore * 100}%` }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Semantic Score bar */}
+      {semanticScore >= 0 && (
+        <div className="mb-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs font-medium text-accent">Semantic Score</span>
+            <span className="text-xs font-bold text-accent">
+              {Math.round(semanticScore * 100)}%
+            </span>
+          </div>
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-linear-to-r from-primary to-accent transition-all duration-300"
+              style={{ width: `${semanticScore * 100}%` }}
             />
           </div>
         </div>

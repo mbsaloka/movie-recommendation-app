@@ -3,10 +3,35 @@
 import { RecommenderProvider, useRecommender } from "@/context/recommender-context"
 import { SearchBox } from "@/components/search-box"
 import { RecommendationsList } from "@/components/recommendations-list"
+import { SelectedMovieDetail } from "@/components/selected-movie-detail"
 import { Loader2, AlertCircle } from "lucide-react"
+import { apiClient } from "@/lib/api"
 
 function HomeContent() {
-  const { recommendations, isLoading, error, selectedMovie } = useRecommender()
+  const {
+    recommendations, isLoading, error, selectedMovie, selectedMovieDetail,
+    setSelectedMovie, setSelectedMovieDetail, setRecommendations, setIsLoading, setError
+  } = useRecommender()
+
+  const handleSelectRecommendation = async (movieId: string) => {
+    setIsLoading(true)
+    setSelectedMovie(movieId)
+
+    try {
+      const movieDetail = await apiClient.getMovieDetails(movieId)
+      setSelectedMovieDetail(movieDetail)
+
+      const recResult = await apiClient.getRecommendations(movieId)
+      setRecommendations(recResult.recommendations)
+
+      setError(null)
+    } catch (err) {
+      console.error(err)
+      setError("Failed to load new movie recommendations")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <main className="min-h-screen bg-background">
@@ -15,7 +40,7 @@ function HomeContent() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-bold text-foreground">Movie Recommendation</h1>
-            <p className="text-muted-foreground">Knowladge-Based Movie Recommendations</p>
+            <p className="text-muted-foreground">Knowledge-Based Movie Recommendations</p>
           </div>
         </div>
       </header>
@@ -50,11 +75,19 @@ function HomeContent() {
           </div>
         )}
 
+        {/* Detail Movie */}
+        {selectedMovieDetail && !isLoading && (
+          <SelectedMovieDetail movie={selectedMovieDetail} />
+        )}
+
         {/* Recommendations */}
         {!isLoading && recommendations.length > 0 && (
           <div className="space-y-12">
             {/* Recommendations */}
-            <RecommendationsList recommendations={recommendations} />
+            <RecommendationsList
+              recommendations={recommendations}
+              onSelectMovie={handleSelectRecommendation}
+            />
           </div>
         )}
 

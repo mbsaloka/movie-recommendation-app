@@ -4,15 +4,10 @@ import pandas as pd
 from pathlib import Path
 from neo4j import GraphDatabase
 from sklearn.metrics.pairwise import cosine_similarity
-
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# =========================
-# ✅ KONFIGURASI
-# =========================
 
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USER")
@@ -24,10 +19,6 @@ CACHE_PATH = Path("embeddings_cache.pkl")
 
 TOP_K = 10
 
-
-# =========================
-# ✅ NEO4J CONNECTOR (RINGKAS)
-# =========================
 
 class Neo4jConnection:
     def __init__(self):
@@ -60,10 +51,6 @@ class Neo4jConnection:
 
         return [(scores[i][0], float(norm[i])) for i in range(len(scores))], True
 
-
-# =========================
-# ✅ SEMANTIC LAYER (LOAD CACHE ONLY)
-# =========================
 
 class SemanticLayer:
     def __init__(self):
@@ -110,10 +97,6 @@ class SemanticLayer:
         return [(results[i][0], float(norm[i])) for i in range(len(results))]
 
 
-# =========================
-# ✅ HYBRID RECOMMENDER (INFERENCE ONLY)
-# =========================
-
 class HybridRecommender:
     def __init__(self):
         self.neo4j = Neo4jConnection()
@@ -122,36 +105,79 @@ class HybridRecommender:
         self.semantic_weight = 0.5
 
     def get_recommendations(self, movie_title: str, top_k: int = TOP_K):
+
         if not self.semantic.movie_exists(movie_title):
-            return [], False
+            return {
+                "hybrid": [],
+                "graph": [],
+                "semantic": [],
+                "fallback": True
+            }
 
         graph_scores, has_graph = self.neo4j.get_graph_scores(movie_title, limit=100)
         semantic_scores = self.semantic.get_semantic_scores(movie_title, limit=100)
 
-        graph_dict = dict(graph_scores)
-        semantic_dict = dict(semantic_scores)
+        graph_dict = {
+            t if isinstance(item, tuple) else item["title"]:
+            s if isinstance(item, tuple) else item["score"]
+            for item in graph_scores
+            for t, s in [(item if isinstance(item, tuple) else (item["title"], item["score"]))]
+        }
 
-        fallback = not has_graph
+        semantic_dict = {
+            t if isinstance(item, tuple) else item["title"]:
+            s if isinstance(item, tuple) else item["score"]
+            for item in semantic_scores
+            for t, s in [(item if isinstance(item, tuple) else (item["title"], item["score"]))]
+        }
+
+        fallback = not has_graph or max(graph_dict.values(), default=0) == 0
+
         all_movies = set(graph_dict) | set(semantic_dict)
 
         hybrid_scores = []
+
         for title in all_movies:
             g = graph_dict.get(title, 0.0)
             s = semantic_dict.get(title, 0.0)
 
-            score = s if fallback else (0.5 * g + 0.5 * s)
+            score = s if fallback else (
+                self.graph_weight * g + self.semantic_weight * s
+            )
+
             hybrid_scores.append((title, score))
 
         hybrid_scores.sort(key=lambda x: x[1], reverse=True)
         top_results = hybrid_scores[:top_k]
 
         if not top_results:
-            return [], fallback
+            return {
+                "hybrid": [],
+                "graph": [],
+                "semantic": [],
+                "fallback": fallback
+            }
 
-        max_score = max(s for _, s in top_results)
-        final_results = [
-            (title, score, int((score / max_score) * 100))
+        max_score = max(s for _, s in top_results) or 1e-8
+
+        hybrid_final = [
+            {
+                "title": title,
+                "score": float(score),
+                "confidence": round((score / max_score) * 100, 2)
+            }
             for title, score in top_results
         ]
 
-        return final_results, fallback
+        return {
+            "hybrid": hybrid_final,
+            "graph": [
+                {"title": t, "score": float(s)}
+                for t, s in graph_dict.items()
+            ],
+            "semantic": [
+                {"title": t, "score": float(s)}
+                for t, s in semantic_dict.items()
+            ],
+            "fallback": fallback
+        }
