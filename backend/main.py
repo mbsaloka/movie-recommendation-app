@@ -77,8 +77,8 @@ def search_movies(query: str = Query(...)):
 def get_movie_detail(movie_id: int):
     cache_key = f"movie:{movie_id}"
     cached = get_cache(cache_key)
-    # if cached:
-        # return cached
+    if cached:
+        return cached
 
     with get_session() as session:
         cypher = """
@@ -117,8 +117,8 @@ def get_movie_detail(movie_id: int):
 def get_recommendations(movie_id: int):
     cache_key = f"rec:{movie_id}"
     cached = get_cache(cache_key)
-    # if cached:
-    #     return cached
+    if cached:
+        return cached
 
     recommender = HybridRecommender()
 
